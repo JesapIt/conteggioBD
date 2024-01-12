@@ -6,10 +6,6 @@ from datetime import date
 import datetime
 from PIL import Image
 import pickle
-import sys
-import path
-
-
 
 image = Image.open('jesap.png')
 
