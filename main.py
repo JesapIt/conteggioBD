@@ -5,12 +5,15 @@ from gspread import Cell
 from datetime import date
 import datetime
 from PIL import Image
+import pickle
+import sys
+import path
 
 
 
 image = Image.open('jesap.png')
 
-st.set_page_config(page_title='Conteggio Ore', page_icon = image, initial_sidebar_state = 'auto')
+st.set_page_config(page_title='Timetree', page_icon = image, initial_sidebar_state = 'auto')
 hide_streamlit_style = """
             <style>
             #MainMenu {visibility: hidden;}
@@ -26,8 +29,8 @@ creds = ServiceAccountCredentials.from_json_keyfile_name('key_conteggio.json', s
 client = gspread.authorize(creds)
 
 
-st.markdown('## Area Business Development')
-st.markdown('### [Link google sheet](https://docs.google.com/spreadsheets/d/1ioR9yXMCJJxuxaiuEBoPKP4-EJLa6RgdYZicrTQpxl0/edit#gid=0)')
+st.markdown('## Business Development Area')
+st.markdown('### [Google Sheet Link](https://docs.google.com/spreadsheets/d/1ioR9yXMCJJxuxaiuEBoPKP4-EJLa6RgdYZicrTQpxl0/edit#gid=0)')
 link_BD = "https://docs.google.com/spreadsheets/d/1ioR9yXMCJJxuxaiuEBoPKP4-EJLa6RgdYZicrTQpxl0/edit#gid=0"
 sht = client.open_by_url(link_BD)
 
@@ -36,13 +39,13 @@ def fun():
 	st.session_state.multi = []
 	if nome != '':
 		if not temp_att:
-			st.warning('Inserire almeno un\'attività')
+			st.warning('Choose at least one activity')
 			return
 		double = 0
 		double_inprova = 0
 		for w in sht.worksheets():
 			lower_title = w.title.lower()
-			index_inprova = lower_title.find("- socio in prova")
+			index_inprova = lower_title.find("- trainee")
 			if (index_inprova >= 0):
 				lower_title = lower_title[0:index_inprova-1]
 			lower_name = nome.lower()
@@ -54,24 +57,24 @@ def fun():
 					double += 1
 					work = w
 		if double == 0 and double_inprova == 0:
-			st.error('Nessuna risorsa trovata con questo nome/cognome')
+			st.error('No member has been found with this name/surname')
 			return
 		if double > 1 and (not in_prova):
-			st.warning('Sono state trovate più risorse con questo nome/cognome, cerca di essre più specifico.')
+			st.warning('Multiple members have been found with this name/surname; please try to be more specific.')
 			return
 		if double_inprova > 1 and (in_prova):
-			st.warning('Sono state trovate più risorse in prova con questo nome/cognome, cerca di essre più specifico.')
+			st.warning('Multiple trainees have been found with this name/surname; please try to be more specific.')
 			return
 		else:
 			if in_prova: 
 				if double_inprova == 0:
-					st.error('Non è stata trovata nessuna risorsa corrispondente ai criteri di ricerca')
+					st.error('No member matching the search criteria has been found')
 					return
 				elif double_inprova == 1:
 					current_work = work_inprova
 			elif (not in_prova):
 				if double == 0:
-					st.error('Non è stata trovata nessuna risorsa corrispondente ai criteri di ricerca')
+					st.error('No member matching the search criteria has been found')
 					return
 				elif double == 1:
 					current_work = work
@@ -89,23 +92,23 @@ def fun():
 				c3 = Cell(int(row) , 3, str(dictionary[a]).replace(':', '.'))
 				current_work.update_cells([c1,c2,c3], value_input_option='USER_ENTERED')
 
-			st.success(f'Conteggio ore di {current_work.title} aggiornato')
+			st.success(f"{current_work.title}'s Timetree has been updated")
 	else:
-		st.warning('Inserire un nome e/o cognome')
+		st.warning('First name and/or Last name are required')
 	return
 
 # --- Interfaccia ----
-nome = st.text_input('Nome e/o Cognome. Se Socio in prova, spunta la checkbox relativa')
-in_prova = st.checkbox('Socio in Prova')
-data = st.date_input('Data', value=date.today())
-options = ['Call d\'area', 'Assemblea mensile', 'Delega', 'Recruiting', 'Mentoring', 'Progetto esterno'
-,'Progetto interno', 'Formazione', 'Call con HR buddy', 'Case study', 'Organizzazione area', 'Task interno', 'Evento', 'Revisione Task', 'Business proposal', 'Preventivo', 'Prima call con un lead', 'Call follow-up con un lead', 'Lead generation', 'Risposta a mail cliente', 'Board Resp/Resp Vice', 'Altro']
+nome = st.text_input('First name and/or Last name. Check the box if you are a trainee')
+in_prova = st.checkbox('Trainee')
+data = st.date_input('Date', value=date.today())
+options = ['Area Call', 'Monthly Meeting', 'Team', 'Recruiting', 'Mentoring', 'External Project'
+,'Internal Project', 'Training', 'HR Buddy Call', 'Case Study', 'Area Organization', 'Task', 'Corporate Event', 'Task Review', 'Business Proposal', 'Quote', 'First Lead Call', 'Follow-up Lead Call', 'Lead Generation', "Reply to Client's Email", 'Board-Head/Head-Deputy Call', 'Other']
 
-att = st.multiselect('Attività', options, key="multi")
+att = st.multiselect('Activity', options, key="multi")
 dictionary = {}
 temp_att = []
 for a in att:
-	if a == "Progetto esterno":
+	if a == "External Project":
 		### estrazione nomi progetti in corso
 		prog_link = "https://docs.google.com/spreadsheets/d/1kaiBTPxp-o0IVn1j54QGuPJOeYdHxJ9Iqg30QwYqnGI/edit#gid=1965451645"
 		prog_spread_sht = client.open_by_url(prog_link)
@@ -115,24 +118,24 @@ for a in att:
 		column_d = prog_sht.col_values(3)  # Column D (poi diventata colonna C con nuovo foglio) is index 3
 		column_e = prog_sht.col_values(4)
 
-		progetti_in_corso = []
+		progetti_in_corso = ["Farmacie del Corso", "EveryBotics", "COSOP", "Olio SB"] #era vuoto []
 		for name, value, state in zip(column_b, column_d, column_e):
-			if value.lower() == 'in corso' and state.lower() == 'progetto esterno':
+			if value.lower() == 'in corso' and state.lower() == 'external project':
 				progetti_in_corso.append(name)
 		### fine estrazione
-		sel_prog = st.selectbox("Selezionare il progetto", progetti_in_corso)
+		sel_prog = st.selectbox("Select one project", progetti_in_corso)
 		if sel_prog:
-			temp_att.append('Progetto esterno - ' + sel_prog)
-			n_ore = st.time_input(f'Numero di ore: {sel_prog}', datetime.time(1, 0), key=sel_prog+'1')
-			dictionary['Progetto esterno - ' + sel_prog] = n_ore
+			temp_att.append('External Project - ' + sel_prog)
+			n_ore = st.time_input(f'Number of hours worked: {sel_prog}', datetime.time(1, 0), key=sel_prog+'1')
+			dictionary['External Project - ' + sel_prog] = n_ore
 
 	else:
 		temp_att.append(a)
-		n_ore = st.time_input(f'Numero di ore: {a}', datetime.time(1, 0), key=a)
+		n_ore = st.time_input(f'Number of hours worked: {a}', datetime.time(1, 0), key=a)
 		dictionary[a] = n_ore
 
 data = data.strftime("%d/%m/%Y")
-sub = st.button("Invia",on_click=fun)
+sub = st.button("Submit",on_click=fun)
 
 # Font: Nunito, colore bottone blu
 m = st.markdown("""
@@ -146,6 +149,13 @@ div.stButton > button:first-child {
     background-color: #2e9aff;
     border-color: #2e9aff;
 }
+
+div.stButton > button:hover {
+    color:#ffffff;
+	background-color: rgba(89, 55, 146, 0.8);
+	border-color: #ffffff;
+    }
+				
 header.css-1avcm0n, section {
 	background-color: rgba(89, 55, 146, 0.8);
 }
