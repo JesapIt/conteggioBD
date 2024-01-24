@@ -114,7 +114,7 @@ for a in att:
 		column_d = prog_sht.col_values(3)  # Column D (poi diventata colonna C con nuovo foglio) is index 3
 		column_e = prog_sht.col_values(4)
 
-		progetti_in_corso = ["Farmacie del Corso", "EveryBotics", "COSOP", "Olio SB"] #era vuoto []
+		progetti_in_corso = [] #era vuoto []
 		for name, value, state in zip(column_b, column_d, column_e):
 			if value.lower() == 'in corso' and state.lower() == 'external project':
 				progetti_in_corso.append(name)
