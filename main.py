@@ -98,7 +98,7 @@ nome = st.text_input('First name and/or Last name. Check the box if you are a tr
 in_prova = st.checkbox('Trainee')
 data = st.date_input('Date', value=date.today())
 options = ['Area Call', 'Monthly Meeting', 'Team', 'Recruiting', 'Mentoring', 'External Project'
-,'Internal Project', 'Training', 'HR Buddy Call', 'Case Study', 'Area Organization', 'Task', 'Corporate Event', 'Task Review', 'Business Proposal', 'Contracts' , 'Quote', 'First Lead Call', 'Follow-up Lead Call', 'Lead Generation', "Lead management", 'Board-Head/Head-Deputy Call', 'Partnership', 'Other']
+,'Internal Project', 'Training', 'HR Buddy Call', 'Case Study', 'Area Organization', 'Task', 'Corporate Event', 'Task Review', 'Business Proposal', 'Contracts' , 'Quote', 'First Lead Call', 'Follow-up Lead Call', 'Lead Generation', "Lead management", 'Board-Head/Head-Deputy Call', 'Partnership', 'Other', 'Business Game']
 
 att = st.multiselect('Activity', options, key="multi")
 dictionary = {}
